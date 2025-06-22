@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cognizant GNS IT- Future WAN (SDWAN) Project Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #aaa; padding: 8px; text-align: left; }
+    th { background: #222; color: #fff; }
+    tr.completed { background: #c7f5cb; }
+    tr.inprogress { background: #e6f7ff; }
+    tr:nth-child(even) { background: #f5f5f5; }
+    .form-row input, .form-row select { margin-right: 10px; }
+    .form-row { margin-top: 1.5rem; }
+    .actions button { margin-right: 5px; }
+    h1 { color: #20435c; }
+  </style>
+</head>
+<body>
+  <h1>Cognizant GNS IT- Future WAN (SDWAN) Project Tracker</h1>
+  <h2>Online Project Tracker</h2>
+  <table id="tasks">
+    <thead>
+      <tr>
+        <th>Task</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Status</th>
+        <th>Remarks</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Tasks will be inserted here -->
+    </tbody>
+  </table>
+
+  <form id="addForm" class="form-row" autocomplete="off">
+    <input type="text" id="task" placeholder="Task" required>
+    <input type="date" id="start" required>
+    <input type="date" id="end" required>
+    <select id="status">
+      <option>Not Started</option>
+      <option>In-Progress</option>
+      <option>Completed</option>
+    </select>
+    <input type="text" id="remarks" placeholder="Remarks">
+    <button type="submit" id="submitBtn">Add Task</button>
+    <button type="button" id="cancelEditBtn" style="display:none;">Cancel</button>
+  </form>
+
+  <script>
+    let tasks = [
+      {task: "RFI Process", start: "2025-04-12", end: "2025-04-28", status: "Completed", remarks: ""},
+      {task: "RFQ Process", start: "2025-05-15", end: "2025-06-17", status: "Completed", remarks: ""},
+      {task: "New SDWAN Vendor Finalization (Top two)", start: "2025-06-15", end: "2025-06-30", status: "In-Progress", remarks: "Needs multiple internal discussion with GEO and Procurement"},
+      {task: "POC Site selection, Device delivery, CS controls", start: "2025-07-01", end: "2025-07-15", status: "Not Started", remarks: ""},
+      {task: "POC with Top two", start: "2025-07-16", end: "2025-08-14", status: "Not Started", remarks: ""},
+      {task: "Business Case (Future WAN)", start: "2025-08-16", end: "2025-08-29", status: "Not Started", remarks: ""},
+      {task: "Vendor Onboarding Versa (Optional)", start: "2025-09-01", end: "2025-09-30", status: "Not Started", remarks: ""},
+      {task: "Hardware Delivery", start: "2025-11-01", end: "2025-12-31", status: "Not Started", remarks: ""},
+      {task: "Deployments (Cisco Sites)", start: "2025-09-15", end: "2026-02-28", status: "Not Started", remarks: "Only License procurement"},
+      {task: "Deployments (New SDWAN Sites)", start: "2026-01-01", end: "2027-03-27", status: "Not Started", remarks: ""}
+    ];
+
+    let editingIndex = null;
+
+    function renderTable() {
+      const tbody = document.querySelector("#tasks tbody");
+      tbody.innerHTML = "";
+      tasks.forEach((task, idx) => {
+        const tr = document.createElement("tr");
+        tr.className = task.status === "Completed" ? "completed" : 
+                       task.status === "In-Progress" ? "inprogress" : "";
+        tr.innerHTML = `
+          <td>${task.task}</td>
+          <td>${task.start}</td>
+          <td>${task.end}</td>
+          <td>${task.status}</td>
+          <td>${task.remarks}</td>
+          <td class="actions">
+            <button type="button" onclick="editTask(${idx})">Edit</button>
+            <button type="button" onclick="deleteTask(${idx})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function addTask(e) {
+      e.preventDefault();
+      const task = document.getElementById("task").value.trim();
+      const start = document.getElementById("start").value;
+      const end = document.getElementById("end").value;
+      const status = document.getElementById("status").value;
+      const remarks = document.getElementById("remarks").value.trim();
+
+      if (editingIndex === null) {
+        // Add mode
+        tasks.push({task, start, end, status, remarks});
+      } else {
+        // Edit mode
+        tasks[editingIndex] = {task, start, end, status, remarks};
+        editingIndex = null;
+        document.getElementById("submitBtn").textContent = "Add Task";
+        document.getElementById("cancelEditBtn").style.display = "none";
+      }
+      renderTable();
+      e.target.reset();
+    }
+
+    function editTask(idx) {
+      const t = tasks[idx];
+      document.getElementById("task").value = t.task;
+      document.getElementById("start").value = t.start;
+      document.getElementById("end").value = t.end;
+      document.getElementById("status").value = t.status;
+      document.getElementById("remarks").value = t.remarks;
+      editingIndex = idx;
+      document.getElementById("submitBtn").textContent = "Update Task";
+      document.getElementById("cancelEditBtn").style.display = "";
+    }
+
+    function deleteTask(idx) {
+      if (confirm("Delete this task?")) {
+        if (editingIndex === idx) {
+          cancelEdit();
+        }
+        tasks.splice(idx, 1);
+        renderTable();
+      }
+    }
+
+    function cancelEdit() {
+      editingIndex = null;
+      document.getElementById("addForm").reset();
+      document.getElementById("submitBtn").textContent = "Add Task";
+      document.getElementById("cancelEditBtn").style.display = "none";
+    }
+
+    document.getElementById("addForm").addEventListener("submit", addTask);
+    document.getElementById("cancelEditBtn").addEventListener("click", cancelEdit);
+
+    // Expose to global scope for inline onclick
+    window.editTask = editTask;
+    window.deleteTask = deleteTask;
+
+    // Initial render
+    renderTable();
+  </script>
+</body>
+</html>
